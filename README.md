@@ -5,15 +5,49 @@ Smart Kiosk tenant pour la gestion de frigos connectés NU Fridge.
 ## Développement Ultra-Simple
 
 ### Prérequis
-- VS Code avec l'extension Dev Containers
-- Docker
+- Docker et Docker Compose
+- VS Code avec l'extension Dev Containers (optionnel)
 
-### Lancement en 3 étapes
-1. `git clone` ce repository
-2. Ouvrir dans VS Code
-3. Accepter "Reopen in Container"
+### Lancement Automatisé en 1 Étape
+```bash
+./setup.sh dev
+```
 
-**C'est tout ! Le développement démarre automatiquement.**
+**C'est tout ! L'environnement complet démarre automatiquement.**
+
+### Workflow Équipe Mixte (Humains + IA)
+```bash
+# 1. Setup environnement
+./setup.sh dev
+
+# 2. Monitoring en temps réel
+./monitor.sh
+
+# 3. Modifications (humains ou agents IA)
+# Modifier src/Dashboard.jsx → Hot reload instantané
+# Modifier src/theme.json → Thème mis à jour
+# Ajouter src/components/ → Nouveaux composants
+
+# 4. Build production
+./build.sh
+
+# 5. Test complet
+./test-workflow.sh
+```
+
+### Scripts Disponibles
+- `./setup.sh [dev|prod]` - Setup environnement
+- `./monitor.sh [--watch]` - Monitoring système
+- `./build.sh` - Build images production
+- `./stop.sh [dev|prod|all]` - Arrêt environnement
+- `./test-workflow.sh` - Test complet
+- `./help.sh` - Aide et commandes
+
+### Documentation IA
+- **[AI_AGENT_GUIDE.md](AI_AGENT_GUIDE.md)** - Guide complet pour agents IA
+- **APIs REST** disponibles pour automation
+- **Hot reload** pour feedback instantané
+- **Monitoring** en temps réel des modifications
 
 ## Architecture
 
