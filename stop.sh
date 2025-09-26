@@ -35,5 +35,34 @@ case "$MODE" in
         ;;
 esac
 
-log "📊 Remaining containers:"
+# Cleanup SmartKiosk internal containers (Docker-in-Docker)
+log "🧹 Cleaning up SmartKiosk internal containers..."
+
+# Arrêter les conteneurs internes créés par l'orchestrateur
+for container in nufridge-backend nufridge-frontend nufridge-nginx nufridge-chromium; do
+    if docker ps -q -f name="$container" | grep -q .; then
+        log "Stopping internal container: $container"
+        docker stop "$container" >/dev/null 2>&1 || true
+        docker rm "$container" >/dev/null 2>&1 || true
+    fi
+done
+
+# Nettoyer les réseaux internes
+for network in nufridge-internal; do
+    if docker network ls -q -f name="$network" | grep -q .; then
+        log "Removing internal network: $network"
+        docker network rm "$network" >/dev/null 2>&1 || true
+    fi
+done
+
+log "📊 Remaining NU Fridge containers:"
 docker ps | grep -E "(nufridge|smartkiosk)" || echo "None"
+
+log "📦 SmartKiosk volumes:"
+docker volume ls | grep -E "(smartkiosk|nufridge)" || echo "None"
+
+echo
+log "💡 To completely reset:"
+echo "  • Remove volumes: docker volume prune"
+echo "  • Remove images: docker rmi \$(docker images | grep nufridge | awk '{print \$3}')"
+echo "  • Clean all: docker system prune -a"

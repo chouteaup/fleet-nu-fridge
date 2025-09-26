@@ -1,0 +1,40 @@
+{
+  "tenant": "nufridge",
+  "timestamp": "2025-09-26T11:18:11Z",
+  "orchestrator": {
+    "status": "running",
+    "uptime": "up 4 hours, 5 minutes"
+  },
+  "services": {
+    "backend": {
+      "status": "healthy",
+      "logs": "no_errors",
+      "uptime": "17"
+    }
+,
+    "frontend": {
+      "status": "unhealthy",
+      "logs": "no_errors",
+      "uptime": "0"
+    }
+,
+    "nginx": {
+      "status": "healthy",
+      "logs": "no_errors",
+      "uptime": "8"
+    }
+,
+    "chromium": {
+      "status": "healthy",
+      "logs": "no_errors",
+      "uptime": "8"
+    }
+  },
+  "network": {
+    "internal_network": "1"
+  },
+  "endpoints": {
+    "nginx": "http://localhost:8080",
+    "backend_api": "http://localhost:8080/api/health"
+  }
+}

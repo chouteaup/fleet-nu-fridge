@@ -1,59 +1,99 @@
 version: '3.8'
 
 services:
-  # Hub MQTT Fleet Core (service générique)
+  # Hub MQTT Fleet Core
   hub:
     image: acrfleetcoredev.azurecr.io/fleetcore-hub:latest
+    container_name: nufridge-hub
     ports:
       - "1883:1883"
       - "9001:9001"
     restart: unless-stopped
+    networks:
+      - nufridge-network
 
-  # Backend NU Fridge (hérite SmartKiosk Core)
+  # Backend API avec bridge MQTT - Mode Production
   backend:
     build:
       context: .
       dockerfile: Dockerfile.backend
+    container_name: nufridge-backend
     ports:
       - "3001:3001"
     environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - MQTT_BROKER_URL=mqtt://hub:1883
       - TENANT=nufridge
       - TENANT_NAME=NU Fridge
-      - MQTT_BROKER_URL=mqtt://hub:1883
-      - NODE_ENV=production
     depends_on:
       - hub
     restart: unless-stopped
+    networks:
+      - nufridge-network
 
-  # Frontend NU Fridge (hérite SmartKiosk Core)
+  # Frontend React - Mode Production
   frontend:
     build:
       context: .
       dockerfile: Dockerfile.frontend
+    container_name: nufridge-frontend
+    expose:
+      - "3000"
     environment:
+      - NODE_ENV=production
       - TENANT=nufridge
       - TENANT_NAME=NU Fridge
-      - VITE_API_URL=http://backend:3001
-    depends_on:
-      - backend
+    restart: unless-stopped
+    networks:
+      - nufridge-network
 
-  # Nginx NU Fridge (hérite SmartKiosk Core)
-  nginx:
+  # Web server - Mode Production
+  web:
     build:
       context: .
-      dockerfile: Dockerfile.nginx
+      dockerfile: Dockerfile.web
+    container_name: nufridge-web
     ports:
       - "8080:80"
-      - "8443:443"
     environment:
+      - NODE_ENV=production
+      - API_BACKEND_URL=http://backend:3001
+      - FRONTEND_URL=http://frontend:3000
       - TENANT=nufridge
-      - NGINX_BACKEND_HOST=backend
-      - NGINX_FRONTEND_HOST=frontend
+      - TENANT_NAME=NU Fridge
     depends_on:
-      - frontend
       - backend
+      - frontend
     restart: unless-stopped
+    networks:
+      - nufridge-network
+
+  # Kiosk display - Mode Production
+  kiosk:
+    build:
+      context: .
+      dockerfile: Dockerfile.kiosk
+    container_name: nufridge-kiosk
+    ports:
+      - "5900:5900"  # VNC pour debugging
+    environment:
+      - DISPLAY=:0
+      - KIOSK_URL=http://web:80
+      - SCREEN_WIDTH=1920
+      - SCREEN_HEIGHT=1080
+      - DEBUG=false
+      - TENANT=nufridge
+      - TENANT_NAME=NU Fridge
+    depends_on:
+      - web
+    restart: unless-stopped
+    networks:
+      - nufridge-network
+    # Optionnel: Si accès GPU requis pour performance
+    # devices:
+    #   - /dev/dri:/dev/dri
 
 networks:
-  default:
-    name: nufridge-network
+  nufridge-network:
+    driver: bridge

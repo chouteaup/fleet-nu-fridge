@@ -2,7 +2,7 @@
 set -e
 
 # NU Fridge SmartKiosk - Setup Script
-# Usage: ./setup.sh [dev|prod]
+# Usage: ./setup.sh [dev|prod|test]
 
 MODE=${1:-dev}
 SCRIPT_DIR="$(cd "$(dirname "${BASH_SOURCE[0]}")" && pwd)"
@@ -44,14 +44,20 @@ if [ "$MODE" = "dev" ]; then
     success "Development environment started!"
     echo
     log "🌐 Access URLs:"
-    echo "  • Frontend (Hot Reload): http://localhost:5173"
-    echo "  • Backend API: http://localhost:3001"
-    echo "  • Full Interface: http://localhost:8080"
+    echo "  • DevContainer Frontend (Hot Reload): http://localhost:5173"
+    echo "  • DevContainer Backend API: http://localhost:3001"
+    echo "  • DevContainer Interface: http://localhost:8080"
+    echo "  • SmartKiosk Orchestrateur: http://localhost:8081"
     echo "  • MQTT: mqtt://localhost:1883"
     echo
     log "📝 DevContainer:"
     echo "  • Open in VS Code: code ."
     echo "  • Accept 'Reopen in Container' for full development environment"
+    echo
+    log "🐳 SmartKiosk Orchestrateur (Docker-in-Docker):"
+    echo "  • Héberge backend/frontend/nginx/chromium en interne"
+    echo "  • Logs: ./logs/"
+    echo "  • Health: http://localhost:8081/health"
 
 elif [ "$MODE" = "prod" ]; then
     log "Building production images..."
@@ -63,29 +69,74 @@ elif [ "$MODE" = "prod" ]; then
     success "Production environment started!"
     echo
     log "🌐 Access URLs:"
-    echo "  • Interface: http://localhost:8080"
-    echo "  • API: http://localhost:3001"
+    echo "  • SmartKiosk Interface: http://localhost:8080"
+    echo "  • SmartKiosk HTTPS: https://localhost:8443"
     echo "  • MQTT: mqtt://localhost:1883"
+    echo
+    log "🐳 Architecture Production:"
+    echo "  • Hub: Service MQTT externe (ACR)"
+    echo "  • SmartKiosk: Orchestrateur avec backend/frontend/nginx/chromium internes (ACR)"
+    echo "  • Logs: ./logs/"
+    echo
+    warn "⚠️  Production nécessite authentification ACR pour images Fleet Core"
+
+elif [ "$MODE" = "test" ]; then
+    log "Building test images (mock containers)..."
+    docker-compose -f docker-compose.test.yml build
+
+    log "Starting test environment..."
+    docker-compose -f docker-compose.test.yml up -d
+
+    success "Test environment started!"
+    echo
+    log "🌐 Access URLs:"
+    echo "  • SmartKiosk Interface: http://localhost:8080"
+    echo "  • Direct Backend (mock): http://localhost:3001"
+    echo "  • MQTT: mqtt://localhost:1883"
+    echo
+    log "🧪 Architecture Test:"
+    echo "  • Hub: MQTT local (eclipse-mosquitto)"
+    echo "  • SmartKiosk: Orchestrateur avec conteneurs mock nginx/alpine"
+    echo "  • Mode: Validation architecture Docker-in-Docker"
+    echo "  • Logs: ./logs/"
 fi
 
 # Health check
 log "Performing health checks..."
 sleep 5
 
-# Check services
-for service in hub backend; do
+# Check services (nouvelle architecture 2-services)
+if [ "$MODE" = "dev" ]; then
+    services=("hub" "smartkiosk-dev" "devcontainer")
+elif [ "$MODE" = "test" ]; then
+    services=("hub-test" "smartkiosk-test")
+else
+    services=("hub" "smartkiosk")
+fi
+
+for service in "${services[@]}"; do
     if docker-compose -f docker-compose.$MODE.yml ps | grep -q "$service.*Up"; then
         success "$service is running"
     else
-        error "$service failed to start"
+        if [[ "$service" == "devcontainer" ]]; then
+            warn "$service might be optional in some dev setups"
+        else
+            error "$service failed to start"
+        fi
     fi
 done
 
-if [ "$MODE" = "dev" ]; then
-    if docker-compose -f docker-compose.dev.yml ps | grep -q "frontend.*Up"; then
-        success "frontend is running"
+# Vérification spécifique SmartKiosk orchestrateur
+if [ "$MODE" = "prod" ]; then
+    log "Checking SmartKiosk internal services..."
+    sleep 10  # Attendre que l'orchestrateur démarre les services internes
+
+    # Vérifier les logs de l'orchestrateur
+    if docker logs nufridge-smartkiosk 2>/dev/null | grep -q "SmartKiosk orchestrateur prêt"; then
+        success "SmartKiosk orchestrateur has started internal services"
     else
-        warn "frontend might need manual start in DevContainer"
+        warn "SmartKiosk orchestrateur may still be initializing internal services"
+        log "Check logs: docker logs nufridge-smartkiosk"
     fi
 fi
 

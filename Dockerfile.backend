@@ -1,19 +1,20 @@
-# Héritage de SmartKiosk Core Backend
-FROM acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-backend:latest
+FROM acrfleetcoredev.azurecr.io/fleetcore-backend:latest
 
-# Metadata tenant
+# NU Fridge Backend Extension
 LABEL tenant="nufridge" \
       tenant.name="NU Fridge" \
-      tenant.type="smartkiosk" \
-      tenant.version="1.0.0"
+      fleet.core.extends="backend"
 
-# Copier les customizations tenant
-COPY src/ /app/tenant/
+# Copy tenant-specific customizations
+COPY src/backend/ /app/src/custom/
 
-# Variables d'environnement tenant
-ENV TENANT=nufridge \
-    TENANT_NAME="NU Fridge" \
-    TENANT_CONFIG_PATH=/app/tenant
+# Install additional dependencies if needed
+# RUN npm install additional-package
 
-# Le SmartKiosk Core backend chargera automatiquement
-# les customizations depuis /app/tenant/
+# Tenant-specific environment variables
+ENV TENANT=nufridge
+ENV TENANT_NAME="NU Fridge"
+ENV CUSTOM_ROUTES_PATH=/app/src/custom
+
+# Use base image startup
+CMD ["node", "src/server.js"]

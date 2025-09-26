@@ -1,22 +1,20 @@
-# Héritage de SmartKiosk Core Frontend
-FROM acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-frontend:latest
+FROM acrfleetcoredev.azurecr.io/fleetcore-frontend:latest
 
-# Metadata tenant
+# NU Fridge Frontend Extension
 LABEL tenant="nufridge" \
       tenant.name="NU Fridge" \
-      tenant.type="smartkiosk" \
-      tenant.version="1.0.0"
+      fleet.core.extends="frontend"
 
-# Copier les customizations tenant
-COPY src/ /app/tenant/
+# Copy tenant-specific customizations
+COPY src/frontend/ /usr/share/nginx/html/custom/
 
-# Variables d'environnement tenant
-ENV TENANT=nufridge \
-    TENANT_NAME="NU Fridge" \
-    TENANT_CONFIG_PATH=/app/tenant
+# Copy tenant assets and theme
+COPY src/assets/ /usr/share/nginx/html/assets/
+COPY src/config/ /usr/share/nginx/html/config/
 
-# Le SmartKiosk Core frontend intègrera automatiquement :
-# - Dashboard personnalisé : /app/tenant/Dashboard.jsx
-# - Thème NU Fridge : /app/tenant/theme.json
-# - Composants custom : /app/tenant/components/
-# - Assets NU : /app/tenant/assets/
+# Tenant-specific environment variables
+ENV TENANT=nufridge
+ENV TENANT_NAME="NU Fridge"
+
+# Use base nginx configuration
+CMD ["nginx", "-g", "daemon off;"]

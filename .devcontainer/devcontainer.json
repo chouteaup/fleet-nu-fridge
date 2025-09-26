@@ -1,17 +1,89 @@
 {
-  "name": "NUFridge SmartKiosk",
-  "dockerComposeFile": "../docker-compose.dev.yml",
-  "service": "devcontainer",
-  "workspaceFolder": "/workspace",
+  "name": "NU Fridge SmartKiosk Tenant",
+  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
+  "workspaceFolder": "/workspaces/nufridge",
+
+  "features": {
+    "ghcr.io/devcontainers/features/docker-in-docker:2": {
+      "version": "latest",
+      "enableNonRootDocker": true,
+      "moby": true
+    },
+    "ghcr.io/devcontainers/features/git:1": {},
+    "ghcr.io/devcontainers/features/azure-cli:1": {
+      "installBicep": true,
+      "version": "latest"
+    }
+  },
+
   "customizations": {
     "vscode": {
       "extensions": [
         "bradlc.vscode-tailwindcss",
         "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint"
-      ]
+        "dbaeumer.vscode-eslint",
+        "ms-vscode.vscode-typescript-next",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense",
+        "ms-azuretools.vscode-docker",
+        "ms-vscode-remote.remote-containers",
+        "ms-vscode.azure-account",
+        "ms-azuretools.vscode-azureresourcegroups",
+        "vsciot-vscode.azure-iot-tools",
+        "ms-vscode.vscode-json",
+        "redhat.vscode-yaml",
+        "mqttx.vscode-mqttx",
+        "gruntfuggly.todo-tree",
+        "eamodio.gitlens",
+        "usernamehw.errorlens"
+      ],
+      "settings": {
+        "terminal.integrated.defaultProfile.linux": "bash",
+        "docker.dockerPath": "/usr/local/bin/docker",
+        "eslint.workingDirectories": ["./src"],
+        "editor.formatOnSave": true,
+        "editor.defaultFormatter": "esbenp.prettier-vscode",
+        "[dockerfile]": {
+          "editor.defaultFormatter": "ms-azuretools.vscode-docker"
+        },
+        "docker.enableDockerComposeLanguageService": true,
+        "files.associations": {
+          "Dockerfile.*": "dockerfile",
+          "docker-compose*.yml": "dockercompose"
+        }
+      }
     }
   },
-  "forwardPorts": [5173, 3001, 8080],
-  "postCreateCommand": "echo 'NUFridge DevContainer ready! 🚀'"
+
+  "forwardPorts": [3001, 5173, 8080, 1883, 9001],
+  "portsAttributes": {
+    "3001": {
+      "label": "Backend API",
+      "onAutoForward": "ignore"
+    },
+    "5173": {
+      "label": "Frontend Dev",
+      "onAutoForward": "ignore"
+    },
+    "8080": {
+      "label": "Web Proxy",
+      "onAutoForward": "openBrowser"
+    },
+    "1883": {
+      "label": "MQTT Broker",
+      "onAutoForward": "ignore"
+    },
+    "9001": {
+      "label": "MQTT WebSocket",
+      "onAutoForward": "ignore"
+    }
+  },
+
+  "postCreateCommand": "sudo usermod -aG docker node && npm install",
+  "postStartCommand": "echo '🚀 NU Fridge DevContainer ready!' && echo '📋 Available commands:' && echo '  • ./build.sh - Build tenant images' && echo '  • docker-compose -f docker-compose.dev.yml up -d - Start dev services' && echo '  • docker-compose -f docker-compose.prod.yml up -d - Start prod services'",
+
+  "remoteUser": "node",
+  "mounts": [
+    "source=nufridge-node-modules,target=/workspaces/nufridge/node_modules,type=volume"
+  ]
 }

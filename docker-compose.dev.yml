@@ -4,66 +4,107 @@ services:
   # DevContainer pour développement NU Fridge
   devcontainer:
     image: mcr.microsoft.com/devcontainers/javascript-node:18
+    container_name: nufridge-devcontainer
     volumes:
       - .:/workspace:cached
-      - /var/run/docker.sock:/var/run/docker.sock
+      - devcontainer-node-modules:/workspace/node_modules
     command: sleep infinity
     ports:
-      - "5173:5173"  # Vite dev server
-      - "3001:3001"  # Backend API
-      - "8080:8080"  # Nginx
+      - "5174:5173"  # Vite dev server (port différent pour éviter conflits)
+      - "3002:3001"  # Backend API (port différent pour éviter conflits)
+      - "8082:8080"  # Interface web (port différent pour éviter conflits)
     environment:
       - TENANT=nufridge
       - TENANT_NAME=NU Fridge
+      - DEV_MODE=true
     working_dir: /workspace
+    networks:
+      - nufridge-dev-network
 
-  # Hub MQTT Fleet Core (service générique)
+  # Hub MQTT Fleet Core
   hub:
     image: acrfleetcoredev.azurecr.io/fleetcore-hub:latest
+    container_name: nufridge-hub-dev
     ports:
       - "1883:1883"
       - "9001:9001"
+    restart: unless-stopped
+    networks:
+      - nufridge-dev-network
 
-  # Backend SmartKiosk Core avec customizations tenant
-  backend:
-    image: acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-backend:latest
+  # Backend API avec bridge MQTT - Mode Développement
+  backend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    container_name: nufridge-backend-dev
     ports:
       - "3001:3001"
+      - "9229:9229"  # Debug Node.js
     environment:
+      - NODE_ENV=development
+      - PORT=3001
+      - MQTT_BROKER_URL=mqtt://hub:1883
       - TENANT=nufridge
       - TENANT_NAME=NU Fridge
-      - MQTT_BROKER_URL=mqtt://hub:1883
+      - DEBUG=nufridge:*
     volumes:
-      - ./src:/app/tenant:ro  # Mount tenant customizations
+      - ./src/backend:/app/src/custom:rw
+      - ./logs:/app/logs
     depends_on:
       - hub
+    restart: unless-stopped
+    networks:
+      - nufridge-dev-network
 
-  # Frontend SmartKiosk Core avec surcharges NU Fridge
-  frontend:
-    image: acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-frontend:latest
+  # Frontend React - Mode Développement
+  frontend-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    container_name: nufridge-frontend-dev
     ports:
-      - "5173:5173"
+      - "5173:5173"  # Vite dev server avec HMR
     environment:
-      - TENANT=nufridge
-      - TENANT_NAME=NU Fridge
-      - VITE_API_URL=http://backend:3001
+      - NODE_ENV=development
+      - VITE_API_BASE_URL=http://localhost:3001
+      - VITE_TENANT=nufridge
+      - VITE_TENANT_NAME=NU Fridge
     volumes:
-      - ./src:/app/tenant:ro  # Mount tenant customizations
-    depends_on:
-      - backend
+      - ./src/frontend:/usr/share/nginx/html/custom:rw
+      - ./src/assets:/usr/share/nginx/html/assets:rw
+    restart: unless-stopped
+    networks:
+      - nufridge-dev-network
 
-  # Nginx SmartKiosk Core avec configuration tenant
-  nginx:
-    image: acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-nginx:latest
+  # Web server - Mode Développement
+  web-dev:
+    build:
+      context: .
+      dockerfile: Dockerfile.web
+    container_name: nufridge-web-dev
     ports:
       - "8080:80"
-      - "8443:443"
     environment:
+      - NODE_ENV=development
+      - API_BACKEND_URL=http://backend-dev:3001
+      - FRONTEND_DEV_URL=http://frontend-dev:5173
       - TENANT=nufridge
-      - NGINX_BACKEND_HOST=backend
-      - NGINX_FRONTEND_HOST=frontend
+      - TENANT_NAME=NU Fridge
     volumes:
-      - ./src:/app/tenant:ro  # Mount tenant customizations
+      - ./src/nginx:/etc/nginx/conf.d/tenant:rw
+      - ./logs:/var/log/nginx
     depends_on:
-      - frontend
-      - backend
+      - backend-dev
+      - frontend-dev
+    restart: unless-stopped
+    networks:
+      - nufridge-dev-network
+
+networks:
+  nufridge-dev-network:
+    driver: bridge
+
+volumes:
+  devcontainer-node-modules:
+    name: nufridge-devcontainer-node-modules

@@ -49,13 +49,37 @@ Smart Kiosk tenant pour la gestion de frigos connectés NU Fridge.
 - **Hot reload** pour feedback instantané
 - **Monitoring** en temps réel des modifications
 
-## Architecture
+## Architecture Multi-Images Fleet Core
 
-Ce tenant hérite des images Fleet Core depuis l'Azure Container Registry :
-- `acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-frontend:latest`
-- `acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-backend:latest`
-- `acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-nginx:latest`
-- `acrfleetcoredev.azurecr.io/fleetcore-hub:latest`
+### Évolution Architecturale 🆕
+
+**AVANT** (Docker-in-Docker complexe):
+- 1 image monolithique avec orchestrateur Docker-in-Docker
+- Privilèges `privileged: true` requis
+- Complexité de debugging et maintenance élevée
+
+**MAINTENANT** (Multi-images simplifiées):
+- 4 images séparées héritant de Fleet Core ACR
+- Aucun privilège spécial requis
+- Architecture plus sûre, scalable et maintenable
+
+### Images Fleet Core Héritées
+
+Ce tenant étend les images Fleet Core depuis Azure Container Registry :
+- **Backend**: `acrfleetcoredev.azurecr.io/fleetcore-backend:latest`
+- **Frontend**: `acrfleetcoredev.azurecr.io/fleetcore-frontend:latest`
+- **Web (Nginx)**: `acrfleetcoredev.azurecr.io/fleetcore-web:latest`
+- **Kiosk (Chromium)**: `acrfleetcoredev.azurecr.io/fleetcore-kiosk:latest`
+- **Hub (MQTT)**: `acrfleetcoredev.azurecr.io/fleetcore-hub:latest`
+
+### Bénéfices Multi-Images
+
+✅ **Simplicité**: Chaque service = 1 container dédié
+✅ **Sécurité**: Plus de Docker-in-Docker privilégié
+✅ **Performance**: Images légères avec héritage Fleet Core
+✅ **Maintenance**: Mises à jour Core indépendantes
+✅ **Debugging**: Logs et monitoring par service
+✅ **Scalabilité**: Scaling horizontal par composant
 
 ## Personnalisation NU Fridge
 
@@ -81,41 +105,124 @@ Ce tenant hérite des images Fleet Core depuis l'Azure Container Registry :
 
 ```
 ├── src/                        # Customizations NU Fridge
-│   ├── Dashboard.jsx           # Dashboard NU Fridge personnalisé
-│   ├── theme.json              # Thème et branding NU
-│   ├── components/             # Composants React custom
+│   ├── backend/                # Extensions API backend
+│   │   └── routes.js           # Routes tenant spécifiques
+│   ├── frontend/               # Customizations React
+│   │   └── index.html          # Page d'accueil NU Fridge
+│   ├── nginx/                  # Configuration Nginx
+│   │   └── tenant.conf         # Proxy rules tenant
+│   ├── kiosk/                  # Configuration affichage kiosk
 │   ├── assets/                 # Assets spécifiques NU
-│   └── config/                 # Configuration tenant
-├── Dockerfile.frontend         # FROM SmartKiosk Core Frontend
-├── Dockerfile.backend          # FROM SmartKiosk Core Backend
-├── Dockerfile.nginx            # FROM SmartKiosk Core Nginx
-├── docker-compose.dev.yml      # Développement (volumes mount)
-└── docker-compose.prod.yml     # Production (héritage FROM)
+│   ├── config/                 # Configuration tenant
+│   └── static/                 # Fichiers statiques
+├── Dockerfile.backend          # FROM fleetcore-backend:latest
+├── Dockerfile.frontend         # FROM fleetcore-frontend:latest
+├── Dockerfile.web              # FROM fleetcore-web:latest
+├── Dockerfile.kiosk            # FROM fleetcore-kiosk:latest
+├── docker-compose.dev.yml      # Développement (multi-services)
+├── docker-compose.prod.yml     # Production (héritage Fleet Core)
+└── build.sh                    # Build script multi-images
+```
+
+### Architecture de Service
+
+```
+┌─────────────────────────────────────────┐
+│         NU FRIDGE ARCHITECTURE          │
+│  ┌─────────────────────────────────────┐│
+│  │         KIOSK DISPLAY               ││
+│  │  • Chromium en mode kiosk           ││
+│  │  • Affichage plein écran            ││
+│  │  • FROM fleetcore-kiosk:latest      ││
+│  └─────────────────────────────────────┘│
+│           ▲                             │
+│           │ HTTP                        │
+│  ┌─────────────────────────────────────┐│
+│  │         WEB PROXY                   ││
+│  │  • Nginx reverse proxy             ││
+│  │  • SSL/TLS + gzip                  ││
+│  │  • FROM fleetcore-web:latest       ││
+│  └─────────────────────────────────────┘│
+│     ▲                        ▲          │
+│     │ /api/*                 │ /*       │
+│  ┌─────────────┐    ┌─────────────────┐│
+│  │   BACKEND   │    │    FRONTEND     ││
+│  │ Node.js API │    │ React SPA       ││
+│  │ MQTT Bridge │    │ NU Fridge UI    ││
+│  │ Core + Ext. │    │ Core + Custom   ││
+│  └─────────────┘    └─────────────────┘│
+│         ▲                              │
+│         │ MQTT                         │
+│  ┌─────────────────────────────────────┐│
+│  │         HUB MQTT                    ││
+│  │  • Mosquitto 2.0                   ││
+│  │  • WebSocket support               ││
+│  │  • FROM fleetcore-hub:latest       ││
+│  └─────────────────────────────────────┘│
+└─────────────────────────────────────────┘
 ```
 
 ## Modes de Fonctionnement
 
-### Développement (Hot Reload)
+### Développement (Multi-Services)
 ```bash
-# DevContainer ultra-simple
-code .  # → "Reopen in Container" → Développement instantané
-
-# Ou docker-compose manuel
+# Démarrer tous les services de développement
 docker-compose -f docker-compose.dev.yml up -d
+
+# Monitoring des services
+docker-compose -f docker-compose.dev.yml ps
+
+# Logs de tous les services
+docker-compose -f docker-compose.dev.yml logs -f
+
+# Logs d'un service spécifique
+docker-compose -f docker-compose.dev.yml logs -f backend-dev
 ```
 
-Les customizations dans `src/` sont montées comme volumes et reflétées instantanément.
+**Services disponibles en développement:**
+- `backend-dev`: API Node.js avec hot reload
+- `frontend-dev`: Interface React avec HMR
+- `web-dev`: Nginx proxy avec configuration tenant
+- `hub`: MQTT broker Mosquitto
 
-### Production (Héritage Images)
+### Production (Images Optimisées)
 ```bash
-# Build tenant avec héritage SmartKiosk Core
+# Build toutes les images tenant
+./build.sh --tag=v1.0.0
+
+# Ou build spécifique
 docker-compose -f docker-compose.prod.yml build
 
 # Deploy production
 docker-compose -f docker-compose.prod.yml up -d
+
+# Avec monitoring kiosk
+docker-compose -f docker-compose.prod.yml up -d kiosk
 ```
 
-Les customizations sont intégrées dans les images via `COPY src/ /app/tenant/`.
+**Services production:**
+- `backend`: API optimisée avec extensions tenant
+- `frontend`: SPA React avec customisations intégrées
+- `web`: Nginx proxy avec SSL/TLS et compression
+- `kiosk`: Affichage Chromium en mode kiosk
+- `hub`: MQTT broker avec persistance
+
+### Commandes Utiles
+
+```bash
+# Test de l'architecture
+curl http://localhost:3001/health              # Backend health
+curl http://localhost:3000                     # Frontend direct
+curl http://localhost:8080                     # Via proxy web
+curl http://localhost:8080/api/health          # API via proxy
+
+# MQTT testing
+mosquitto_pub -h localhost -t "test" -m "hello"
+mosquitto_sub -h localhost -t "test" -C 1
+
+# Build et test complet
+./build.sh && docker-compose -f docker-compose.prod.yml up -d
+```
 
 ## Support
 
