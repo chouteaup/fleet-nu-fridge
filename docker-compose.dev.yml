@@ -17,16 +17,16 @@ services:
       - TENANT_NAME=NU Fridge
     working_dir: /workspace
 
-  # Hub MQTT (utilise l'image ACR)
+  # Hub MQTT Fleet Core (service générique)
   hub:
-    image: acrfleetcoredev.azurecr.io/smartkiosk-hub:latest
+    image: acrfleetcoredev.azurecr.io/fleetcore-hub:latest
     ports:
       - "1883:1883"
       - "9001:9001"
 
   # Backend SmartKiosk Core avec customizations tenant
   backend:
-    image: acrfleetcoredev.azurecr.io/smartkiosk-backend:latest
+    image: acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-backend:latest
     ports:
       - "3001:3001"
     environment:
@@ -40,7 +40,7 @@ services:
 
   # Frontend SmartKiosk Core avec surcharges NU Fridge
   frontend:
-    image: acrfleetcoredev.azurecr.io/smartkiosk-frontend:latest
+    image: acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-frontend:latest
     ports:
       - "5173:5173"
     environment:
@@ -54,7 +54,7 @@ services:
 
   # Nginx SmartKiosk Core avec configuration tenant
   nginx:
-    image: acrfleetcoredev.azurecr.io/smartkiosk-nginx:latest
+    image: acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-nginx:latest
     ports:
       - "8080:80"
       - "8443:443"

@@ -51,11 +51,11 @@ Smart Kiosk tenant pour la gestion de frigos connectés NU Fridge.
 
 ## Architecture
 
-Ce tenant hérite des images SmartKiosk Core depuis l'Azure Container Registry :
-- `acrfleetcoredev.azurecr.io/smartkiosk-frontend:latest`
-- `acrfleetcoredev.azurecr.io/smartkiosk-backend:latest`
-- `acrfleetcoredev.azurecr.io/smartkiosk-nginx:latest`
-- `acrfleetcoredev.azurecr.io/smartkiosk-hub:latest`
+Ce tenant hérite des images Fleet Core depuis l'Azure Container Registry :
+- `acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-frontend:latest`
+- `acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-backend:latest`
+- `acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-nginx:latest`
+- `acrfleetcoredev.azurecr.io/fleetcore-hub:latest`
 
 ## Personnalisation NU Fridge
 

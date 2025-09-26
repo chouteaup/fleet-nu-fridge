@@ -37,10 +37,10 @@
     "core": {
       "registry": "acrfleetcoredev.azurecr.io",
       "images": {
-        "frontend": "smartkiosk-frontend:latest",
-        "backend": "smartkiosk-backend:latest",
-        "nginx": "smartkiosk-nginx:latest",
-        "hub": "smartkiosk-hub:latest"
+        "frontend": "fleetcore-smartkiosk-frontend:latest",
+        "backend": "fleetcore-smartkiosk-backend:latest",
+        "nginx": "fleetcore-smartkiosk-nginx:latest",
+        "hub": "fleetcore-hub:latest"
       }
     },
     "customization": {

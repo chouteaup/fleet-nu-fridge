@@ -1,5 +1,5 @@
 # Héritage de SmartKiosk Core Frontend
-FROM acrfleetcoredev.azurecr.io/smartkiosk-frontend:latest
+FROM acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-frontend:latest
 
 # Metadata tenant
 LABEL tenant="nufridge" \

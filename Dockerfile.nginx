@@ -1,5 +1,5 @@
 # Héritage de SmartKiosk Core Nginx
-FROM acrfleetcoredev.azurecr.io/smartkiosk-nginx:latest
+FROM acrfleetcoredev.azurecr.io/fleetcore-smartkiosk-nginx:latest
 
 # Metadata tenant
 LABEL tenant="nufridge" \

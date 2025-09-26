@@ -1,9 +1,9 @@
 version: '3.8'
 
 services:
-  # Hub MQTT (image ACR directe)
+  # Hub MQTT Fleet Core (service générique)
   hub:
-    image: acrfleetcoredev.azurecr.io/smartkiosk-hub:latest
+    image: acrfleetcoredev.azurecr.io/fleetcore-hub:latest
     ports:
       - "1883:1883"
       - "9001:9001"
