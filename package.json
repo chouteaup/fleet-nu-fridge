@@ -1,0 +1,55 @@
+{
+  "name": "nufridge-smartkiosk",
+  "version": "1.0.0",
+  "description": "NU Fridge Smart Kiosk - Tenant customization for Fleet IoT Platform",
+  "main": "src/Dashboard.jsx",
+  "scripts": {
+    "dev": "echo 'Starting NU Fridge DevContainer...' && echo 'Open in VS Code and use Dev Containers extension'",
+    "build": "echo 'Building NU Fridge tenant...'",
+    "test": "echo 'Testing NU Fridge components...'",
+    "lint": "echo 'Linting NU Fridge code...'"
+  },
+  "dependencies": {
+    "react": "^18.0.0",
+    "react-dom": "^18.0.0",
+    "lucide-react": "^0.263.1"
+  },
+  "devDependencies": {
+    "@types/react": "^18.0.0",
+    "@types/react-dom": "^18.0.0",
+    "prettier": "^2.8.0",
+    "eslint": "^8.0.0"
+  },
+  "keywords": [
+    "iot",
+    "smartkiosk",
+    "fridge",
+    "tenant",
+    "nufridge",
+    "fleet"
+  ],
+  "author": "NU Fridge Team",
+  "license": "UNLICENSED",
+  "private": true,
+  "tenant": {
+    "name": "nufridge",
+    "displayName": "NU Fridge",
+    "core": {
+      "registry": "acrfleetcoredev.azurecr.io",
+      "images": {
+        "frontend": "smartkiosk-frontend:latest",
+        "backend": "smartkiosk-backend:latest",
+        "nginx": "smartkiosk-nginx:latest",
+        "hub": "smartkiosk-hub:latest"
+      }
+    },
+    "customization": {
+      "theme": "src/theme.json",
+      "components": {
+        "Dashboard": "src/Dashboard.jsx"
+      },
+      "assets": "src/assets/",
+      "config": "src/config/"
+    }
+  }
+}

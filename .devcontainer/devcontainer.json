@@ -1,0 +1,17 @@
+{
+  "name": "NUFridge SmartKiosk",
+  "dockerComposeFile": "../docker-compose.dev.yml",
+  "service": "devcontainer",
+  "workspaceFolder": "/workspace",
+  "customizations": {
+    "vscode": {
+      "extensions": [
+        "bradlc.vscode-tailwindcss",
+        "esbenp.prettier-vscode",
+        "dbaeumer.vscode-eslint"
+      ]
+    }
+  },
+  "forwardPorts": [5173, 3001, 8080],
+  "postCreateCommand": "echo 'NUFridge DevContainer ready! 🚀'"
+}

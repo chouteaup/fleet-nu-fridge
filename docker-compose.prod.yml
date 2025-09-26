@@ -1,0 +1,59 @@
+version: '3.8'
+
+services:
+  # Hub MQTT (image ACR directe)
+  hub:
+    image: acrfleetcoredev.azurecr.io/smartkiosk-hub:latest
+    ports:
+      - "1883:1883"
+      - "9001:9001"
+    restart: unless-stopped
+
+  # Backend NU Fridge (hérite SmartKiosk Core)
+  backend:
+    build:
+      context: .
+      dockerfile: Dockerfile.backend
+    ports:
+      - "3001:3001"
+    environment:
+      - TENANT=nufridge
+      - TENANT_NAME=NU Fridge
+      - MQTT_BROKER_URL=mqtt://hub:1883
+      - NODE_ENV=production
+    depends_on:
+      - hub
+    restart: unless-stopped
+
+  # Frontend NU Fridge (hérite SmartKiosk Core)
+  frontend:
+    build:
+      context: .
+      dockerfile: Dockerfile.frontend
+    environment:
+      - TENANT=nufridge
+      - TENANT_NAME=NU Fridge
+      - VITE_API_URL=http://backend:3001
+    depends_on:
+      - backend
+
+  # Nginx NU Fridge (hérite SmartKiosk Core)
+  nginx:
+    build:
+      context: .
+      dockerfile: Dockerfile.nginx
+    ports:
+      - "8080:80"
+      - "8443:443"
+    environment:
+      - TENANT=nufridge
+      - NGINX_BACKEND_HOST=backend
+      - NGINX_FRONTEND_HOST=frontend
+    depends_on:
+      - frontend
+      - backend
+    restart: unless-stopped
+
+networks:
+  default:
+    name: nufridge-network

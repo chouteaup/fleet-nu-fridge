@@ -1,0 +1,22 @@
+# Héritage de SmartKiosk Core Frontend
+FROM acrfleetcoredev.azurecr.io/smartkiosk-frontend:latest
+
+# Metadata tenant
+LABEL tenant="nufridge" \
+      tenant.name="NU Fridge" \
+      tenant.type="smartkiosk" \
+      tenant.version="1.0.0"
+
+# Copier les customizations tenant
+COPY src/ /app/tenant/
+
+# Variables d'environnement tenant
+ENV TENANT=nufridge \
+    TENANT_NAME="NU Fridge" \
+    TENANT_CONFIG_PATH=/app/tenant
+
+# Le SmartKiosk Core frontend intègrera automatiquement :
+# - Dashboard personnalisé : /app/tenant/Dashboard.jsx
+# - Thème NU Fridge : /app/tenant/theme.json
+# - Composants custom : /app/tenant/components/
+# - Assets NU : /app/tenant/assets/

@@ -1,0 +1,45 @@
+{
+  "name": "NU Fridge",
+  "primaryColor": "#0891b2",
+  "secondaryColor": "#0e7490",
+  "accentColor": "#06b6d4",
+  "backgroundColor": "#1e293b",
+  "surfaceColor": "#334155",
+  "textColor": "#f1f5f9",
+  "logo": "/tenant/logo-nu-fridge.svg",
+  "favicon": "/tenant/favicon-nu.ico",
+  "branding": {
+    "companyName": "NU Fridge Solutions",
+    "tagline": "Smart Fridge Management",
+    "website": "https://nufridge.example.com",
+    "supportEmail": "support@nufridge.example.com"
+  },
+  "features": {
+    "temperatureMonitoring": true,
+    "inventoryTracking": true,
+    "alertNotifications": true,
+    "energyOptimization": true,
+    "maintenanceScheduling": true,
+    "mobileApp": true
+  },
+  "ui": {
+    "sidebarColor": "#1e293b",
+    "headerColor": "#0f172a",
+    "cardColor": "#475569",
+    "borderColor": "#64748b",
+    "successColor": "#10b981",
+    "warningColor": "#f59e0b",
+    "errorColor": "#ef4444",
+    "infoColor": "#3b82f6"
+  },
+  "dashboard": {
+    "defaultView": "fridge-overview",
+    "widgets": [
+      "temperature-monitor",
+      "inventory-status",
+      "energy-consumption",
+      "maintenance-alerts",
+      "product-expiry"
+    ]
+  }
+}
