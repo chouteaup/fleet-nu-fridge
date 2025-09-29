@@ -1,7 +1,7 @@
 {
   "name": "NU Fridge SmartKiosk Tenant",
   "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
-  "workspaceFolder": "/workspaces/nufridge",
+  "workspaceFolder": "/workspaces/Fridge",
 
   "features": {
     "ghcr.io/devcontainers/features/docker-in-docker:2": {
@@ -79,11 +79,15 @@
     }
   },
 
-  "postCreateCommand": "sudo usermod -aG docker node && npm install",
-  "postStartCommand": "echo '🚀 NU Fridge DevContainer ready!' && echo '📋 Available commands:' && echo '  • ./build.sh - Build tenant images' && echo '  • docker-compose -f docker-compose.dev.yml up -d - Start dev services' && echo '  • docker-compose -f docker-compose.prod.yml up -d - Start prod services'",
+  "postCreateCommand": "sudo usermod -aG docker node && sudo chown -R node:node /workspaces/Fridge && npm install",
+  "postStartCommand": "echo '🚀 NU Fridge DevContainer ready!' && echo '📋 Setup commands:' && echo '  1. az login' && echo '  2. az acr login --name acrfleetcoredev' && echo '  3. ./setup.sh dev' && echo '' && echo '💡 After setup, access:' && echo '  • Frontend: http://localhost:5173' && echo '  • Backend: http://localhost:3001' && echo '  • Interface: http://localhost:8080'",
+
+  "containerEnv": {
+    "NODE_OPTIONS": ""
+  },
 
   "remoteUser": "node",
   "mounts": [
-    "source=nufridge-node-modules,target=/workspaces/nufridge/node_modules,type=volume"
+    "source=nufridge-node-modules,target=/workspaces/Fridge/node_modules,type=volume"
   ]
 }

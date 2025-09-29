@@ -1,5 +1,3 @@
-version: '3.8'
-
 services:
   # DevContainer pour développement NU Fridge
   devcontainer:
@@ -23,7 +21,7 @@ services:
 
   # Hub MQTT Fleet Core
   hub:
-    image: acrfleetcoredev.azurecr.io/fleetcore-hub:latest
+    image: acrfleetcoredev.azurecr.io/fleet-core/hub:dev-amd64
     container_name: nufridge-hub-dev
     ports:
       - "1883:1883"

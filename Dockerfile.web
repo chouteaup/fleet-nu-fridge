@@ -1,4 +1,4 @@
-FROM acrfleetcoredev.azurecr.io/fleetcore-web:latest
+FROM acrfleetcoredev.azurecr.io/fleet-core/web:dev-amd64
 
 # NU Fridge Web Extension
 LABEL tenant="nufridge" \

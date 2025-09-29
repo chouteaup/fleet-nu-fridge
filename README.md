@@ -8,8 +8,13 @@ Smart Kiosk tenant pour la gestion de frigos connectés NU Fridge.
 - Docker et Docker Compose
 - VS Code avec l'extension Dev Containers (optionnel)
 
-### Lancement Automatisé en 1 Étape
+### Lancement Automatisé en 3 Étapes
 ```bash
+# 1. Authentification Azure
+az login
+az acr login --name acrfleetcoredev
+
+# 2. Démarrage environnement
 ./setup.sh dev
 ```
 
@@ -17,13 +22,16 @@ Smart Kiosk tenant pour la gestion de frigos connectés NU Fridge.
 
 ### Workflow Équipe Mixte (Humains + IA)
 ```bash
-# 1. Setup environnement
+# 1. Authentification (une seule fois)
+az login && az acr login --name acrfleetcoredev
+
+# 2. Setup environnement
 ./setup.sh dev
 
-# 2. Monitoring en temps réel
+# 3. Monitoring en temps réel
 ./monitor.sh
 
-# 3. Modifications (humains ou agents IA)
+# 4. Modifications (humains ou agents IA)
 # Modifier src/Dashboard.jsx → Hot reload instantané
 # Modifier src/theme.json → Thème mis à jour
 # Ajouter src/components/ → Nouveaux composants

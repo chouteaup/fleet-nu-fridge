@@ -1,4 +1,4 @@
-FROM acrfleetcoredev.azurecr.io/fleetcore-kiosk:latest
+FROM acrfleetcoredev.azurecr.io/fleet-core/kiosk:dev-amd64
 
 # NU Fridge Kiosk Extension
 LABEL tenant="nufridge" \
