@@ -1,0 +1,16 @@
+FROM mcr.microsoft.com/devcontainers/javascript-node:18
+
+# Install additional tools for Fleet development
+RUN apt-get update && apt-get install -y \
+    jq \
+    dos2unix \
+    openssl \
+    mosquitto-clients \
+    && apt-get clean \
+    && rm -rf /var/lib/apt/lists/*
+
+# Set working directory
+WORKDIR /workspace
+
+# Switch to node user
+USER node

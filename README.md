@@ -1,238 +1,170 @@
-# NU Fridge Smart Kiosk
+# NU Fridge - Fleet IoT Tenant
 
-Smart Kiosk tenant pour la gestion de frigos connectés NU Fridge.
+Projet tenant pour l'équipe NU développant un simulateur de réfrigérateur basé sur la plateforme Fleet IoT.
 
-## Développement Ultra-Simple
+## 🏗️ Architecture
 
-### Prérequis
-- Docker et Docker Compose
-- VS Code avec l'extension Dev Containers (optionnel)
+Ce projet implémente le **système d'héritage modules tenant** selon les spécifications Fleet 2025 :
 
-### Lancement Automatisé en 3 Étapes
+- **Héritage Docker FROM** : Images basées sur Fleet Core
+- **DevContainer autonome** : Environnement de développement isolé
+- **dev-manager avec héritage** : Réutilisation des fonctions Fleet Core
+- **Maintenance évolutive** : Synchronisation automatique Fleet Core
+
+## 🚀 Démarrage Rapide
+
+### 1. DevContainer Setup
+
 ```bash
-# 1. Authentification Azure
-az login
-az acr login --name acrfleetcoredev
+# Ouvrir dans VS Code
+code .
 
-# 2. Démarrage environnement
-./setup.sh dev
+# Sélectionner "Reopen in Container"
+# Le setup Fleet Core s'exécute automatiquement
 ```
 
-**C'est tout ! L'environnement complet démarre automatiquement.**
+### 2. Développement Simulator
 
-### Workflow Équipe Mixte (Humains + IA)
 ```bash
-# 1. Authentification (une seule fois)
-az login && az acr login --name acrfleetcoredev
+# Lancer le simulateur en mode développement
+cd modules/Simulator
+./dev-manager.sh dev ../../config/fridge-dev.json
 
-# 2. Setup environnement
-./setup.sh dev
-
-# 3. Monitoring en temps réel
-./monitor.sh
-
-# 4. Modifications (humains ou agents IA)
-# Modifier src/Dashboard.jsx → Hot reload instantané
-# Modifier src/theme.json → Thème mis à jour
-# Ajouter src/components/ → Nouveaux composants
-
-# 4. Build production
-./build.sh
-
-# 5. Test complet
-./test-workflow.sh
+# Accéder au simulateur
+# http://localhost:5174
 ```
 
-### Scripts Disponibles
-- `./setup.sh [dev|prod]` - Setup environnement
-- `./monitor.sh [--watch]` - Monitoring système
-- `./build.sh` - Build images production
-- `./stop.sh [dev|prod|all]` - Arrêt environnement
-- `./test-workflow.sh` - Test complet
-- `./help.sh` - Aide et commandes
+### 3. Services Fleet Core
 
-### Documentation IA
-- **[AI_AGENT_GUIDE.md](AI_AGENT_GUIDE.md)** - Guide complet pour agents IA
-- **APIs REST** disponibles pour automation
-- **Hot reload** pour feedback instantané
-- **Monitoring** en temps réel des modifications
+Le DevContainer lance automatiquement :
+- **Fleet Backend** : http://localhost:3001
+- **Fleet MQTT Hub** : mqtt://localhost:1883 (WebSocket: ws://localhost:9001)
 
-## Architecture Multi-Images Fleet Core
+## 📁 Structure Projet
 
-### Évolution Architecturale 🆕
+```
+tenants/NU/Fridge/
+├── .devcontainer/              # DevContainer autonome
+│   ├── devcontainer.json       # Configuration VS Code
+│   ├── docker-compose.yml      # Services intégrés
+│   └── Dockerfile.dev          # Image dev tenant
+├── modules/
+│   └── Simulator/              # Module tenant
+│       ├── dev-manager.sh      # Héritage Frontend core
+│       ├── Dockerfile          # FROM fleet-core/frontend
+│       ├── src/                # Application React
+│       │   ├── App.jsx         # Interface Simulator
+│       │   └── main.jsx
+│       └── package.json        # Dependencies tenant
+├── config/
+│   └── fridge-dev.json         # Configuration tenant
+├── scripts/
+│   ├── setup-fleet-core.sh     # Clone/sync Fleet Core
+│   ├── sync-dev-manager.sh     # Sync fonctions core
+│   └── image-manager.sh        # Gestion images tenant
+└── fleet.code-workspace        # Workspace VS Code
+```
 
-**AVANT** (Docker-in-Docker complexe):
-- 1 image monolithique avec orchestrateur Docker-in-Docker
-- Privilèges `privileged: true` requis
-- Complexité de debugging et maintenance élevée
+## 🔧 Workflows Développement
 
-**MAINTENANT** (Multi-images simplifiées):
-- 4 images séparées héritant de Fleet Core ACR
-- Aucun privilège spécial requis
-- Architecture plus sûre, scalable et maintenable
+### Mode Développement
+
+```bash
+# Simulator avec hot-reload (port 5174)
+cd modules/Simulator
+./dev-manager.sh dev ../../config/fridge-dev.json
+```
+
+### Mode Production
+
+```bash
+# Build image tenant
+scripts/image-manager.sh build config/fridge-dev.json Simulator
+
+# Run container tenant
+scripts/image-manager.sh run config/fridge-dev.json Simulator
+```
+
+### Synchronisation Fleet Core
+
+```bash
+# Mise à jour Fleet Core (automatique au démarrage)
+scripts/setup-fleet-core.sh
+
+# Sync fonctions dev-manager (automatique)
+scripts/sync-dev-manager.sh
+```
+
+## 🌐 Configuration Tenant
+
+### Variables d'Environnement
+
+- `TENANT="NU"` - Identité équipe
+- `PROJECT="Fridge"` - Nom projet
+- `VITE_PORT=5174` - Port dédié (évite conflits avec Fleet Core:5173)
+- `VITE_TENANT_NAME="NU Fridge"` - Nom affiché interface
+
+### Ports Dédiés
+
+- **5174** : Simulator Frontend (tenant)
+- **3001** : Fleet Backend API (partagé)
+- **1883** : MQTT Broker (partagé)
+- **9001** : MQTT WebSocket (partagé)
+
+## 🐳 Docker & ACR
 
 ### Images Fleet Core Héritées
 
-Ce tenant étend les images Fleet Core depuis Azure Container Registry :
-- **Backend**: `acrfleetcoredev.azurecr.io/fleetcore-backend:latest`
-- **Frontend**: `acrfleetcoredev.azurecr.io/fleetcore-frontend:latest`
-- **Web (Nginx)**: `acrfleetcoredev.azurecr.io/fleetcore-web:latest`
-- **Kiosk (Chromium)**: `acrfleetcoredev.azurecr.io/fleetcore-kiosk:latest`
-- **Hub (MQTT)**: `acrfleetcoredev.azurecr.io/fleetcore-hub:latest`
+- Base : `acrfleetcoredev.azurecr.io/fleet-core/frontend:dev-amd64`
+- Tenant : `acrfleetcoredev.azurecr.io/fleet-tenant/nu-simulator:dev-amd64`
 
-### Bénéfices Multi-Images
+### Héritage Dockerfile
 
-✅ **Simplicité**: Chaque service = 1 container dédié
-✅ **Sécurité**: Plus de Docker-in-Docker privilégié
-✅ **Performance**: Images légères avec héritage Fleet Core
-✅ **Maintenance**: Mises à jour Core indépendantes
-✅ **Debugging**: Logs et monitoring par service
-✅ **Scalabilité**: Scaling horizontal par composant
-
-## Personnalisation NU Fridge
-
-### Interface Utilisateur
-- **Dashboard personnalisé**: Monitoring temperature, inventaire, consommation énergétique
-- **Thème NU**: Couleurs cyan/blue, branding NU Fridge
-- **Composants spécifiques**: Widgets frigo connecté
-
-### Fonctionnalités
-- Monitoring température en temps réel
-- Suivi inventaire produits
-- Alertes d'expiration
-- Optimisation énergétique
-- Planification maintenance
-
-### URLs de développement
-- Frontend: http://localhost:5173 (Hot reload)
-- Backend API: http://localhost:3001
-- Interface complète: http://localhost:8080
-- MQTT: mqtt://localhost:1883
-
-## Structure des fichiers
-
-```
-├── src/                        # Customizations NU Fridge
-│   ├── backend/                # Extensions API backend
-│   │   └── routes.js           # Routes tenant spécifiques
-│   ├── frontend/               # Customizations React
-│   │   └── index.html          # Page d'accueil NU Fridge
-│   ├── nginx/                  # Configuration Nginx
-│   │   └── tenant.conf         # Proxy rules tenant
-│   ├── kiosk/                  # Configuration affichage kiosk
-│   ├── assets/                 # Assets spécifiques NU
-│   ├── config/                 # Configuration tenant
-│   └── static/                 # Fichiers statiques
-├── Dockerfile.backend          # FROM fleetcore-backend:latest
-├── Dockerfile.frontend         # FROM fleetcore-frontend:latest
-├── Dockerfile.web              # FROM fleetcore-web:latest
-├── Dockerfile.kiosk            # FROM fleetcore-kiosk:latest
-├── docker-compose.dev.yml      # Développement (multi-services)
-├── docker-compose.prod.yml     # Production (héritage Fleet Core)
-└── build.sh                    # Build script multi-images
+```dockerfile
+FROM acrfleetcoredev.azurecr.io/fleet-core/frontend:dev-amd64
+COPY src/ ./src/              # Surcharge application React
+EXPOSE 5174                   # Port tenant dédié
 ```
 
-### Architecture de Service
+## 🔄 Maintenance Évolutive
 
-```
-┌─────────────────────────────────────────┐
-│         NU FRIDGE ARCHITECTURE          │
-│  ┌─────────────────────────────────────┐│
-│  │         KIOSK DISPLAY               ││
-│  │  • Chromium en mode kiosk           ││
-│  │  • Affichage plein écran            ││
-│  │  • FROM fleetcore-kiosk:latest      ││
-│  └─────────────────────────────────────┘│
-│           ▲                             │
-│           │ HTTP                        │
-│  ┌─────────────────────────────────────┐│
-│  │         WEB PROXY                   ││
-│  │  • Nginx reverse proxy             ││
-│  │  • SSL/TLS + gzip                  ││
-│  │  • FROM fleetcore-web:latest       ││
-│  └─────────────────────────────────────┘│
-│     ▲                        ▲          │
-│     │ /api/*                 │ /*       │
-│  ┌─────────────┐    ┌─────────────────┐│
-│  │   BACKEND   │    │    FRONTEND     ││
-│  │ Node.js API │    │ React SPA       ││
-│  │ MQTT Bridge │    │ NU Fridge UI    ││
-│  │ Core + Ext. │    │ Core + Custom   ││
-│  └─────────────┘    └─────────────────┘│
-│         ▲                              │
-│         │ MQTT                         │
-│  ┌─────────────────────────────────────┐│
-│  │         HUB MQTT                    ││
-│  │  • Mosquitto 2.0                   ││
-│  │  • WebSocket support               ││
-│  │  • FROM fleetcore-hub:latest       ││
-│  └─────────────────────────────────────┘│
-└─────────────────────────────────────────┘
-```
+### Synchronisation Automatique
 
-## Modes de Fonctionnement
+1. **postCreateCommand** : `setup-fleet-core.sh`
+2. **postStartCommand** : `sync-dev-manager.sh`
+3. **Fonctions extraites** : Marqueurs `REUSABLE_FUNCTIONS_START/END`
 
-### Développement (Multi-Services)
-```bash
-# Démarrer tous les services de développement
-docker-compose -f docker-compose.dev.yml up -d
+### Héritage dev-manager
 
-# Monitoring des services
-docker-compose -f docker-compose.dev.yml ps
+Le dev-manager tenant **source automatiquement** les fonctions Fleet Core :
+- `install_dependencies()`
+- `check_dev_script()`
+- `start_dev_server()`
 
-# Logs de tous les services
-docker-compose -f docker-compose.dev.yml logs -f
+## 📊 Développement
 
-# Logs d'un service spécifique
-docker-compose -f docker-compose.dev.yml logs -f backend-dev
-```
+### Features Simulator
 
-**Services disponibles en développement:**
-- `backend-dev`: API Node.js avec hot reload
-- `frontend-dev`: Interface React avec HMR
-- `web-dev`: Nginx proxy avec configuration tenant
-- `hub`: MQTT broker Mosquitto
+- Interface React avec Tailwind CSS
+- Simulation température réfrigérateur
+- Contrôles compresseur
+- État connexion MQTT
+- Configuration tenant intégrée
 
-### Production (Images Optimisées)
-```bash
-# Build toutes les images tenant
-./build.sh --tag=v1.0.0
+### Extensions VS Code
 
-# Ou build spécifique
-docker-compose -f docker-compose.prod.yml build
+- IoT spécialisées : `mqttx.vscode-mqttx`, `vsciot-vscode.azure-iot-tools`
+- React/TypeScript : `ms-vscode.vscode-typescript-next`
+- Docker : `ms-azuretools.vscode-docker`
 
-# Deploy production
-docker-compose -f docker-compose.prod.yml up -d
+## 🎯 URLs Développement
 
-# Avec monitoring kiosk
-docker-compose -f docker-compose.prod.yml up -d kiosk
-```
+- **Simulator** : http://localhost:5174 (hot-reload)
+- **Fleet Backend** : http://localhost:3001/api/*
+- **MQTT Test** : `mosquitto_sub -h localhost -t 'test/+' -v`
 
-**Services production:**
-- `backend`: API optimisée avec extensions tenant
-- `frontend`: SPA React avec customisations intégrées
-- `web`: Nginx proxy avec SSL/TLS et compression
-- `kiosk`: Affichage Chromium en mode kiosk
-- `hub`: MQTT broker avec persistance
+---
 
-### Commandes Utiles
-
-```bash
-# Test de l'architecture
-curl http://localhost:3001/health              # Backend health
-curl http://localhost:3000                     # Frontend direct
-curl http://localhost:8080                     # Via proxy web
-curl http://localhost:8080/api/health          # API via proxy
-
-# MQTT testing
-mosquitto_pub -h localhost -t "test" -m "hello"
-mosquitto_sub -h localhost -t "test" -C 1
-
-# Build et test complet
-./build.sh && docker-compose -f docker-compose.prod.yml up -d
-```
-
-## Support
-
-- Email: support@nufridge.example.com
-- Documentation Core: [Fleet IoT Platform](../../README.md)
+**Architecture** : Fleet IoT Platform 2025 - Système Modules Tenant
+**Équipe** : NU Fridge
+**Base Module** : Frontend

@@ -1,73 +1,38 @@
 {
-  "name": "NU Fridge SmartKiosk Tenant",
-  "image": "mcr.microsoft.com/devcontainers/javascript-node:18",
-  "workspaceFolder": "/workspaces/Fridge",
+  "name": "NU Fridge Development",
+  "dockerComposeFile": "docker-compose.yml",
+  "service": "fridge-dev",
+  "workspaceFolder": "/workspace",
 
   "features": {
-    "ghcr.io/devcontainers/features/docker-in-docker:2": {
-      "version": "latest",
-      "enableNonRootDocker": true,
-      "moby": true
-    },
-    "ghcr.io/devcontainers/features/git:1": {},
-    "ghcr.io/devcontainers/features/azure-cli:1": {
-      "installBicep": true,
-      "version": "latest"
-    }
+    "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
+    "ghcr.io/devcontainers/features/node:1": { "version": "18" }
   },
 
   "customizations": {
     "vscode": {
       "extensions": [
-        "bradlc.vscode-tailwindcss",
-        "esbenp.prettier-vscode",
-        "dbaeumer.vscode-eslint",
         "ms-vscode.vscode-typescript-next",
-        "formulahendry.auto-rename-tag",
-        "christian-kohler.path-intellisense",
+        "esbenp.prettier-vscode",
+        "bradlc.vscode-tailwindcss",
         "ms-azuretools.vscode-docker",
-        "ms-vscode-remote.remote-containers",
-        "ms-vscode.azure-account",
-        "ms-azuretools.vscode-azureresourcegroups",
-        "vsciot-vscode.azure-iot-tools",
-        "ms-vscode.vscode-json",
-        "redhat.vscode-yaml",
         "mqttx.vscode-mqttx",
-        "gruntfuggly.todo-tree",
-        "eamodio.gitlens",
-        "usernamehw.errorlens"
-      ],
-      "settings": {
-        "terminal.integrated.defaultProfile.linux": "bash",
-        "docker.dockerPath": "/usr/local/bin/docker",
-        "eslint.workingDirectories": ["./src"],
-        "editor.formatOnSave": true,
-        "editor.defaultFormatter": "esbenp.prettier-vscode",
-        "[dockerfile]": {
-          "editor.defaultFormatter": "ms-azuretools.vscode-docker"
-        },
-        "docker.enableDockerComposeLanguageService": true,
-        "files.associations": {
-          "Dockerfile.*": "dockerfile",
-          "docker-compose*.yml": "dockercompose"
-        }
-      }
+        "vsciot-vscode.azure-iot-tools",
+        "formulahendry.auto-rename-tag",
+        "christian-kohler.path-intellisense"
+      ]
     }
   },
 
-  "forwardPorts": [3001, 5173, 8080, 1883, 9001],
+  "forwardPorts": [5174, 3001, 1883, 9001],
   "portsAttributes": {
-    "3001": {
-      "label": "Backend API",
-      "onAutoForward": "ignore"
-    },
-    "5173": {
-      "label": "Frontend Dev",
-      "onAutoForward": "ignore"
-    },
-    "8080": {
-      "label": "Web Proxy",
+    "5174": {
+      "label": "Simulator Frontend",
       "onAutoForward": "openBrowser"
+    },
+    "3001": {
+      "label": "Fleet Backend API",
+      "onAutoForward": "ignore"
     },
     "1883": {
       "label": "MQTT Broker",
@@ -79,15 +44,6 @@
     }
   },
 
-  "postCreateCommand": "sudo usermod -aG docker node && sudo chown -R node:node /workspaces/Fridge && npm install",
-  "postStartCommand": "echo '🚀 NU Fridge DevContainer ready!' && echo '📋 Setup commands:' && echo '  1. az login' && echo '  2. az acr login --name acrfleetcoredev' && echo '  3. ./setup.sh dev' && echo '' && echo '💡 After setup, access:' && echo '  • Frontend: http://localhost:5173' && echo '  • Backend: http://localhost:3001' && echo '  • Interface: http://localhost:8080'",
-
-  "containerEnv": {
-    "NODE_OPTIONS": ""
-  },
-
-  "remoteUser": "node",
-  "mounts": [
-    "source=nufridge-node-modules,target=/workspaces/Fridge/node_modules,type=volume"
-  ]
+  "postCreateCommand": "scripts/setup-fleet-core.sh",
+  "postStartCommand": "scripts/sync-dev-manager.sh"
 }

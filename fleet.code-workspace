@@ -1,0 +1,32 @@
+{
+  "folders": [
+    {
+      "name": "NU Fridge Tenant",
+      "path": "."
+    },
+    {
+      "name": "Fleet Core (Reference)",
+      "path": ".fleet-core"
+    }
+  ],
+  "settings": {
+    "terminal.integrated.defaultProfile.linux": "bash",
+    "docker.dockerPath": "/usr/local/bin/docker",
+    "editor.formatOnSave": true,
+    "editor.defaultFormatter": "esbenp.prettier-vscode",
+    "files.associations": {
+      "Dockerfile.*": "dockerfile",
+      "docker-compose*.yml": "dockercompose"
+    }
+  },
+  "extensions": {
+    "recommendations": [
+      "ms-vscode.vscode-typescript-next",
+      "esbenp.prettier-vscode",
+      "bradlc.vscode-tailwindcss",
+      "ms-azuretools.vscode-docker",
+      "mqttx.vscode-mqttx",
+      "vsciot-vscode.azure-iot-tools"
+    ]
+  }
+}

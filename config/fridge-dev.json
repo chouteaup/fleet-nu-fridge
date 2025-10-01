@@ -1,0 +1,30 @@
+{
+  "project": {
+    "name": "fleetcore",
+    "tenant": "NU",
+    "project": "Fridge",
+    "environment": "dev"
+  },
+  "tenant_modules": {
+    "Simulator": {
+      "base_module": "Frontend",
+      "port": 5174,
+      "namespace": "nu-fridge",
+      "image_name": "nu-simulator"
+    }
+  },
+  "fleet_core": {
+    "repository": "https://github.com/fleet-org/fleet.git",
+    "branch": "main",
+    "sync_interval": "daily"
+  },
+  "tenant_metadata": {
+    "display_name": "NU Fridge",
+    "registry": "acrfleetcoredev.azurecr.io",
+    "core_images": {
+      "frontend": "fleet-core/frontend:dev-amd64",
+      "backend": "fleet-core/backend:dev-amd64",
+      "hub": "fleet-core/hub:dev-amd64"
+    }
+  }
+}
