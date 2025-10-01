@@ -12,8 +12,7 @@ BASE_MODULE="Frontend"
 
 # Chemins
 WORKSPACE_ROOT="/workspace"
-FLEET_CORE_PATH="/workspace/.fleet-core"
-CORE_FUNCTIONS_FILE="/workspace/scripts/core-functions.sh"
+FLEET_CORE_PATH="../../fleet-core"
 
 # Configuration développement
 VITE_PORT=5174
@@ -22,45 +21,40 @@ VITE_TENANT_NAME="NU Fridge"
 VITE_BACKEND_URL="http://localhost:3001"
 VITE_MQTT_URL="ws://localhost:9001"
 
-# Source core functions if available
-source_core_functions() {
-    if [[ -f "$CORE_FUNCTIONS_FILE" ]]; then
-        # shellcheck source=/dev/null
-        source "$CORE_FUNCTIONS_FILE"
-        print_info "Core functions loaded from Fleet Core"
-    else
-        # Fallback colors if core functions not available
-        RED='\033[0;31m'
-        GREEN='\033[0;32m'
-        YELLOW='\033[1;33m'
-        BLUE='\033[0;34m'
-        NC='\033[0m'
+# Colors for output
+RED='\033[0;31m'
+GREEN='\033[0;32m'
+YELLOW='\033[1;33m'
+BLUE='\033[0;34m'
+NC='\033[0m'
 
-        print_info() {
-            echo -e "${BLUE}[Simulator] ℹ️  $1${NC}"
-        }
+print_info() {
+    echo -e "${BLUE}[Simulator] ℹ️  $1${NC}"
+}
 
-        print_success() {
-            echo -e "${GREEN}[Simulator] ✅ $1${NC}"
-        }
+print_success() {
+    echo -e "${GREEN}[Simulator] ✅ $1${NC}"
+}
 
-        print_error() {
-            echo -e "${RED}[Simulator] ❌ $1${NC}"
-        }
+print_error() {
+    echo -e "${RED}[Simulator] ❌ $1${NC}"
+}
 
-        print_warning() {
-            echo -e "${YELLOW}[Simulator] ⚠️  $1${NC}"
-        }
-
-        print_warning "Core functions not available, using fallback"
-    fi
+print_warning() {
+    echo -e "${YELLOW}[Simulator] ⚠️  $1${NC}"
 }
 
 # Ensure Fleet Core is available
 ensure_core_available() {
     if [[ ! -d "$FLEET_CORE_PATH" ]]; then
         print_error "Fleet Core not found at $FLEET_CORE_PATH"
-        print_info "Run: ../../scripts/setup-fleet-core.sh"
+        print_info "Expected: $FLEET_CORE_PATH/modules-core/Frontend/dev-manager.sh"
+        exit 1
+    fi
+
+    if [[ ! -f "$FLEET_CORE_PATH/modules-core/Frontend/dev-manager.sh" ]]; then
+        print_error "Fleet Core Frontend dev-manager not found"
+        print_info "Expected: $FLEET_CORE_PATH/modules-core/Frontend/dev-manager.sh"
         exit 1
     fi
 }
@@ -144,19 +138,29 @@ EOF
     fi
 }
 
-# Start tenant development server
-start_tenant_dev_server() {
-    print_info "Starting Simulator development server..."
-    print_success "Simulator will be available at: http://localhost:$VITE_PORT"
-    print_info "Tenant: $VITE_TENANT_NAME"
+# Call Fleet Core Frontend dev-manager
+call_fleet_core_frontend() {
+    local mode="$1"
+    local config_file="$2"
 
-    # Use inherited function if available, otherwise fallback
-    if declare -f start_dev_server >/dev/null; then
-        start_dev_server "$VITE_PORT"
-    else
-        print_warning "Using fallback dev server startup"
-        exec npm run dev
+    print_info "Calling Fleet Core Frontend dev-manager..."
+
+    local fleet_frontend_manager="$FLEET_CORE_PATH/modules-core/Frontend/dev-manager.sh"
+
+    if [[ ! -f "$fleet_frontend_manager" ]]; then
+        print_error "Fleet Core Frontend dev-manager not found: $fleet_frontend_manager"
+        exit 1
     fi
+
+    # Set environment for tenant
+    export VITE_PORT="$VITE_PORT"
+    export VITE_TENANT="$VITE_TENANT"
+    export VITE_TENANT_NAME="$VITE_TENANT_NAME"
+    export VITE_BACKEND_URL="$VITE_BACKEND_URL"
+    export VITE_MQTT_URL="$VITE_MQTT_URL"
+
+    # Execute Fleet Core Frontend dev-manager
+    exec "$fleet_frontend_manager" "$mode" "$config_file"
 }
 
 # Development mode
@@ -170,28 +174,10 @@ dev_mode() {
     setup_tenant_dev_environment
     adapt_for_tenant
 
-    # Check if package.json exists
-    if [[ ! -f "package.json" ]]; then
-        print_error "package.json not found in $(pwd)"
-        exit 1
-    fi
+    print_success "Simulator setup completed, delegating to Fleet Core Frontend..."
 
-    # Use inherited functions if available
-    if declare -f install_dependencies >/dev/null; then
-        install_dependencies
-    else
-        print_warning "Core install_dependencies not available, using fallback"
-        if [[ ! -d "node_modules" ]]; then
-            npm install
-        fi
-    fi
-
-    if declare -f check_dev_script >/dev/null; then
-        check_dev_script
-    fi
-
-    # Start tenant development server
-    start_tenant_dev_server
+    # Call Fleet Core Frontend dev-manager with tenant environment
+    call_fleet_core_frontend "dev" "$config_file"
 }
 
 # Run mode
@@ -201,7 +187,7 @@ run_mode() {
     print_info "Starting Simulator in run mode (ACR image)"
 
     # Delegate to tenant image manager
-    local image_manager="../../scripts/image-manager.sh"
+    local image_manager="../../image-manager.sh"
 
     if [[ ! -f "$image_manager" ]]; then
         print_error "Image manager not found: $image_manager"
@@ -228,9 +214,6 @@ usage() {
 
 # Main execution
 main() {
-    # Source core functions first
-    source_core_functions
-
     if [[ $# -lt 2 ]]; then
         usage
         exit 1

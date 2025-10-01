@@ -6,9 +6,9 @@ services:
       context: .
       dockerfile: Dockerfile.dev
     volumes:
-      - ../..:/workspace:cached
+      - ..:/workspace/Fridge:cached
       - /var/run/docker.sock:/var/run/docker.sock
-    working_dir: /workspace
+    working_dir: /workspace/Fridge
     environment:
       - FLEET_CORE_PATH=/workspace/.fleet-core
       - TENANT=NU

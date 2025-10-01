@@ -2,7 +2,7 @@
   "name": "NU Fridge Development",
   "dockerComposeFile": "docker-compose.yml",
   "service": "fridge-dev",
-  "workspaceFolder": "/workspace",
+  "workspaceFolder": "/workspace/Fridge",
 
   "features": {
     "ghcr.io/devcontainers/features/docker-outside-of-docker:1": {},
@@ -44,6 +44,12 @@
     }
   },
 
-  "postCreateCommand": "scripts/setup-fleet-core.sh",
-  "postStartCommand": "scripts/sync-dev-manager.sh"
+  "postCreateCommand": "echo '🚀 NU Fridge DevContainer ready!' && echo '📋 Usage:' && echo '  ./dev-manager.sh fridge-dev dev:Simulator' && echo '  ./dev-manager.sh fridge-dev dev:Simulator run:Backend run:Hub' && echo '' && echo '💡 Fleet Core: fleet-core/modules-core/' && echo '📦 Modules: modules/Simulator/'",
+
+  "containerEnv": {
+    "TENANT": "NU",
+    "PROJECT": "Fridge"
+  },
+
+  "remoteUser": "node"
 }
