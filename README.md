@@ -79,10 +79,10 @@ cd modules/Simulator
 
 ```bash
 # Build image tenant
-scripts/image-manager.sh build config/fridge-dev.json Simulator
+scripts/image-manager.sh build fridge-dev Simulator
 
 # Run container tenant
-scripts/image-manager.sh run config/fridge-dev.json Simulator
+scripts/image-manager.sh run fridge-dev Simulator
 ```
 
 ### Synchronisation Fleet Core
